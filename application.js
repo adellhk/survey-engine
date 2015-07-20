@@ -1,7 +1,40 @@
 $(document).ready(function() {
 	console.log('Hello, Aja.');
 	questionResponseTest();
+
+	newSurveyListener();
 });
+
+function newSurveyListener() {
+	$('#newSurvey').click(function() {
+		$(this).hide();
+		$newSurveyTitleForm = $("<form></form>");
+		$newSurveyTitleForm.append('<input type="text" name="surveyTitle" />');
+		$newSurveyTitleForm.append('<input type="submit" value="submit" />');
+		$newSurveyTitleForm.append('<input type="button" value="cancel" />');
+		$('#newSurveyContainer').append($newSurveyTitleForm);
+		$newSurveyTitleForm.attr('id', 'newSurveyTitleForm');
+	});
+
+	$('#newSurveyContainer').on('submit', 'form', function(e) {
+		e.preventDefault();
+		console.log('clicked submit')
+	});
+
+	$('#newSurveyContainer').on('click', 'button', function() {
+		console.log('hi')
+		if ($(this).attr('value') == 'cancel') {
+			$('#newSurvey').show();
+			debugger; // hide the form
+		};
+	});
+
+};
+
+function Survey(options) {
+	this.name = options['name'];
+	this.questions = options['questions'];
+};
 
 function Question(options) {
 	if (!options['questionText']) throw('Question text is required.');
