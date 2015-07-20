@@ -1,41 +1,53 @@
 $(document).ready(function() {
 	console.log("Hello, Aja.");
-	console.log(questionAnswerTest());
+	console.log(questionResponseTest());
 });
 
-function Question(query) {
-	if (typeof query === "string") {
-		this.text = query;
-	} else {
-		throw "Question must initialize with a query string.";
-	};
-	this.answers = [];
+function Question(options) {
+	if(!options['questionText']) throw('Question text is required');
+	if(!options['questionType']) throw('Question type is required');
 
+	this.questionText = options['questionText'];
+	this.questionType = options['questionType'];
+	this.choices = options['choices']; // can be null, eg. open-ended question
+	this.responses = [];
 };
 
-Question.prototype.insert = function(answer) {
-	if (answer instanceof(Answer)) {
-		this.answers.push(answer);
-		this.answers[this.answers.length-1].question = this;
+Question.prototype.insertResponse = function(response) {
+	if (response instanceof(Response)) {
+		this.responses.push(response);
+		this.responses[this.responses.length-1].question = this;
 	} else {
-		throw "Answer not an answer"
+		throw "Response not a response.";
 	};
 };
 
-function Answer(answer) {
-	if (typeof answer === "string") {
-		this.text = answer;
+Question.prototype.validate = function() {
+	if (
+		this.questionText.length > 0 &&
+		0==0
+		) {
+
+	}
+}
+
+function Response(response) {
+	if (typeof response === "string") {
+		this.text = response;
 	} else {
-		throw "Answer must initialize with an answer string.";
+		throw "Response must initialize with an response string.";
 	};
 	this.question = null;
 };
 
-function questionAnswerTest() {
-	var sky = new Question("What color is the sky?");
-	var blue = new Answer("Blue");
-	var red = new Answer("Red");
-	sky.insert(red);
-	sky.insert(blue);
+function questionResponseTest() {
+	var sky = new Question({
+		questionText: "What color is the sky?",
+		questionType: "radial"
+});
+	var blue = new Response("Blue");
+	var red = new Response("Red");
+	sky.insertResponse(red);
+	sky.insertResponse(blue);
 	return sky;
 };
