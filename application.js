@@ -3,37 +3,58 @@ $(document).ready(function() {
 	questionResponseTest();
 
 	newSurveyListener();
+	surveys = [];
 });
 
 function newSurveyListener() {
-	$('#newSurvey').click(function() {
+	$('#newSurveyButton').click(function() {
 		$(this).hide();
-		$newSurveyTitleForm = $("<form></form>");
-		$newSurveyTitleForm.append('<input type="text" name="surveyTitle" />');
+		$newSurveyTitleForm = $('<form id="newSurveyTitleForm"></form>');
+		$newSurveyTitleForm.append('<input type="text" name="surveyTitle" id="newSurveyTitle" />');
 		$newSurveyTitleForm.append('<input type="submit" value="submit" />');
 		$newSurveyTitleForm.append('<input type="button" value="cancel" />');
 		$('#newSurveyContainer').append($newSurveyTitleForm);
-		$newSurveyTitleForm.attr('id', 'newSurveyTitleForm');
 	});
 
 	$('#newSurveyContainer').on('submit', 'form', function(e) {
 		e.preventDefault();
-		console.log('clicked submit')
+		var surveyTitle = $('#newSurveyTitle').val();
+		var newSurvey = new Survey({name: surveyTitle});
+		if (newSurvey.isValid()) {
+			surveys.push(newSurvey);
+			$('#newSurveyTitleForm').remove();
+			showInProgressSurvey(newSurvey);
+		} else {
+			$('#newSurveyTitleForm').append('Survey title must be at least one letter.');
+		};
 	});
 
 	$('#newSurveyContainer').on('click', 'button', function() {
 		console.log('hi')
 		if ($(this).attr('value') == 'cancel') {
-			$('#newSurvey').show();
+			$('#newSurveyButton').show();
 			debugger; // hide the form
+
 		};
 	});
 
 };
 
+function showInProgressSurvey(newSurvey) {
+	$('#inProgressSurvey').append('<h1 id="inProgressSurveyTitle">'+ newSurvey.name +'</h1>');
+};
+
+// Models Below
+
+
 function Survey(options) {
 	this.name = options['name'];
 	this.questions = options['questions'];
+};
+
+Survey.prototype.isValid = function() {
+	if (!this.name.length > 0) return false;
+	return true;
 };
 
 function Question(options) {
