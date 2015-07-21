@@ -17,6 +17,8 @@
 		<div id='inProgressSurvey'>
 		</div>
 
+		<div id='displayedSurvey'>
+		</div>
 	</body>
 
 	<script id='newTitleForm' type='text/x-handlebars-template'>
@@ -31,13 +33,41 @@
 					<ul class="hidden" id="multiSelectChoices"></ul>
 				<input type="radio" name="type" value="text">Open-Ended<br>
 			{{/if}}
-			<input type='submit'>
+			<button type='submit'>Add Question</button>
 			<div id='errorMessages'></div>
 		</form>
 	</script>
 
 	<script id='radioSubChoice' type="text/x-handlebars-template">
 		<li><input type='text' placeholder='option {{number}}' id='option{{number}}' class='radio-sub-choice' number='{{number}}'><button id='addSubChoice'>Add Another</button></li>
+	</script>
+
+	<script id='displaySurvey' type="text/x-handlebars-template">
+	<h1>{{title}}</h1>
+	<ol class='survey-questions' id='questionList'>
+	</ol>
+	<button id='submitResponses'>Submit Responses</button>
+	</script>
+
+	<script id='displayQuestionTemplate' type="text/x-handlebars-template">
+		<li>
+			<h2>{{title}}</h2>
+			<form id='question-{{number}}'>
+				{{#if multiSelect}}
+					{{#each questionChoices}}
+						<label><input type="checkbox" number="{{@index}}">{{this}}</label><br>
+					{{/each}}
+				{{/if}}
+				{{#if radio}}
+					{{#each questionChoices}}
+						<label><input type="radio" number="{{@index}}">{{this}}</label><br>
+					{{/each}}
+				{{/if}}
+				{{#if text}}
+					<label>Response:<br><input type="text"></label><br>
+				{{/if}}
+			</form>
+		</li>
 	</script>
 
 </html>

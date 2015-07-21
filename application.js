@@ -5,6 +5,7 @@ $(document).ready(function() {
 	newSurveyListener();
 	newQuestionListener();
 	addSubChoiceListener();
+	submitSurveyQuestionsListener();
 
 	surveys = [];
 
@@ -85,6 +86,7 @@ function newQuestionListener(count) {
 				newQuestion: true
 			}));
 			$('#newQuestion').prepend('<p>Question number ' + questionCount + ', ' + currentSurvey.questions[questionCount-1].text + ', added.</p>');
+			if (!document.getElementById('submitSurveyQuestions')) $('#inProgressSurvey').append('<button id="submitSurveyQuestions">Submit Survey Questions</button>');
 		} else {
 			$('#errorMessages').text(newQuestion.errors);
 		};
@@ -129,12 +131,43 @@ function addSubChoiceListener() {
 	});
 };
 
+function submitSurveyQuestionsListener() {
+	$('#inProgressSurvey').on('click', '#submitSurveyQuestions', function() {
+		$('#inProgressSurvey').empty();
+		$('#newSurveyButton').show();
+		displaySurvey(currentSurvey);
+	});
+};
+
+function displaySurvey(survey) {
+	var title = survey.text;
+	var questions = survey.questions;
+	$('#displayedSurvey').append(surveyTemplate({title: title}));
+	questions.forEach(function(question) {
+		$('#questionList').append(displayQuestionTemplate({
+			title: question.text,
+			number: question.number,
+			questionChoices: question.questionChoices,
+			multiSelect: question.questionType === 'multi-select',
+			radio: question.questionType === 'radio',
+			text: question.questionType === 'text'
+		}));
+	});
+
+};
+
 function compileHandlebarsTemplates() {
 	var titleFormSource = $('#newTitleForm').html();
 	titleFormTemplate = Handlebars.compile(titleFormSource);
 
 	var radioSubChoiceSource = $('#radioSubChoice').html();
 	radioSubChoice = Handlebars.compile(radioSubChoiceSource);
+
+	var displaySurveySource = $('#displaySurvey').html();
+	surveyTemplate = Handlebars.compile(displaySurveySource);
+
+	var displayQuestionTemplateSource = $('#displayQuestionTemplate').html();
+	displayQuestionTemplate = Handlebars.compile(displayQuestionTemplateSource);
 };
 
 // Models Below
