@@ -27,7 +27,7 @@ function newSurveyListener() {
 			$('#newSurvey').remove();
 			showInProgressSurvey(newSurvey);
 		} else {
-			$('#newSurvey').append('Survey title must be at least one letter.');
+			$('#errorMessages').text(newSurvey.errors);
 		};
 	});
 
@@ -53,16 +53,15 @@ function newQuestionListener() {
 function showInProgressSurvey(newSurvey) {
 
 	var count = 0;
-	$('#inProgressSurvey').append('<h1 id="inProgressSurveyTitle">'+ newSurvey.text +'</h1>');
+	$('#inProgressSurvey').prepend('<h1 id="inProgressSurveyTitle">'+ newSurvey.text +'</h1>');
 	$('#inProgressSurvey').append('<div id="newQuestionContainer"></div>');
 
-	$('#newQuestionContainer').append(titleFormTemplate(
+	$('#newQuestionContainer').prepend(titleFormTemplate(
 	{
 		type: 'Question',
 		count: (count+1),
 		newQuestion: true
 	}));
-	newQuestionListener(count);
 };
 
 function newQuestionListener(count) {
@@ -75,7 +74,7 @@ function newQuestionListener(count) {
 		if (newQuestion.isValid()) {
 			currentSurvey.insertQuestion(newQuestion);
 		} else {
-			$('#inProgressSurvey').append(newQuestion.errors);
+			$('#errorMessages').text(newQuestion.errors);
 		};
 	});
 };
@@ -96,14 +95,19 @@ function SurveyParent(options) {
 };
 
 SurveyParent.prototype.isValid = function() {
-	if (!this.text || !this.text.length > 0) return false;
+	if (!this.text || !this.text.length > 0) {
+		this.errors += (this.name + " text must be at least one character.")
+		return false;
+	};
 	return true;
 };
 
 Survey.prototype = new SurveyParent();
+Survey.prototype.name = 'Survey';
 function Survey(options) {
 	this.text = (!options['text']) ? "" : options['text']
 	options['questions'] ? this.questions = options['questions'] : this.questions = [];
+	this.errors = "";
 };
 
 Survey.prototype.insertQuestion = function(newQuestion) {
@@ -113,6 +117,7 @@ Survey.prototype.insertQuestion = function(newQuestion) {
 };
 
 Question.prototype = new SurveyParent();
+Question.prototype.name = 'Question';
 function Question(options) {
 	// if (!options['text']) throw('Question text is required.');
 	// if (!options['questionType']) throw('Question type is required.');
@@ -134,6 +139,10 @@ Question.prototype.insertResponse = function(response) {
 };
 
 Question.prototype.isValid = function() {
+	if (!this.questionType) {
+		this.errors += ('No question type selected (eg. radio, multiple-choice, or open-ended');
+		return false;
+	};
 	if (['radio','drop-down','multi-select'].indexOf(this.questionType) != -1) {
 		if(!this.isChoicesValid()) return false;
 	};

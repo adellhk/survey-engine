@@ -13,7 +13,6 @@ Welcome to Aja!
 </div>
 
 <div id='inProgressSurvey'>
-	
 </div>
 
 </body>
@@ -23,10 +22,11 @@ Welcome to Aja!
 		{{#if newQuestion}}
 		<br>
 			<input type="radio" name="type" value="radio">Radio<br>
-			<input type="radio" name="type" value="multi-select">Multiple-Choice<br>
-			<input type="radio" name="type" value="text">Text<br>
+			<input type="radio" name="type" value="multi-select">Multi-Select<br>
+			<input type="radio" name="type" value="text">Open Ended<br>
 		{{/if}}
 		<input type='submit'>
+		<div id='errorMessages'></div>
 	</form>
 </script>
 </html>
