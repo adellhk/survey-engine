@@ -19,7 +19,7 @@ function newSurveyListener() {
 	$('#newSurveyContainer').on('submit', 'form', function(e) {
 		e.preventDefault();
 		var surveyTitle = $('#newSurveyTitle').val();
-		var newSurvey = new Survey({name: surveyTitle});
+		var newSurvey = new Survey({text: surveyTitle});
 		if (newSurvey.isValid()) {
 			surveys.push(newSurvey);
 			$('#newSurveyTitleForm').remove();
@@ -41,27 +41,37 @@ function newSurveyListener() {
 };
 
 function showInProgressSurvey(newSurvey) {
-	$('#inProgressSurvey').append('<h1 id="inProgressSurveyTitle">'+ newSurvey.name +'</h1>');
+	$('#inProgressSurvey').append('<h1 id="inProgressSurveyTitle">'+ newSurvey.text +'</h1>');
 };
 
 // Models Below
 
-
-function Survey(options) {
-	this.name = options['name'];
-	this.questions = options['questions'];
+function SurveyParent(options) {
+	if (options && options['text']) {
+		this.text = options['text']
+	} else {
+		this.text = "";
+	};
 };
 
-Survey.prototype.isValid = function() {
-	if (!this.name.length > 0) return false;
+SurveyParent.prototype.isValid = function() {
+	if (!this.text || !this.text.length > 0) return false;
 	return true;
 };
 
+Survey.prototype = new SurveyParent();
+function Survey(options) {
+	if (!options['text']) throw('Survey title is required');
+	this.text = options['text'];
+	if (options['questions']) this.questions = options['questions'];
+};
+
+Question.prototype = new SurveyParent();
 function Question(options) {
-	if (!options['questionText']) throw('Question text is required.');
+	if (!options['text']) throw('Question text is required.');
 	if (!options['questionType']) throw('Question type is required.');
 
-	this.questionText = options['questionText'];
+	this.text = options['text'];
 	this.questionType = options['questionType'];
 	this.questionChoices = options['questionChoices']; // can be null, eg. open-ended question
 	this.questionResponses = [];
@@ -77,10 +87,11 @@ Question.prototype.insertResponse = function(response) {
 };
 
 Question.prototype.isValid = function() {
-	if (!this.questionText.length > 0) return false;
 	if (['radial','drop-down','multi-select'].indexOf(this.questionType) != -1) {
-		return this.isChoicesValid();
+		if(!this.isChoicesValid()) return false;
 	};
+
+	return this.constructor.prototype.isValid.apply(this);
 };
 
 Question.prototype.isChoicesValid = function() {
@@ -99,7 +110,7 @@ function Response(response) {
 
 function questionResponseTest() {
 	var sky = new Question({
-		questionText: 'What color is the sky?',
+		text: 'What color is the sky?',
 		questionType: 'open-ended'
 	});
 	var blue = new Response('Blue');
@@ -110,7 +121,7 @@ function questionResponseTest() {
 	console.log(sky);
 
 	var badRadial = new Question({
-		questionText: 'How many fl. oz in a liter?',
+		text: 'How many fl. oz in a liter?',
 		questionType: 'radial',
 		questionChoices: []
 	});
