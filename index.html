@@ -18,8 +18,14 @@ Welcome to Aja!
 
 </body>
 <script id='newTitleForm' type='text/x-handlebars-template'>
-	<form id='new{{type}}TitleForm'>
+	<form id='new{{type}}{{count}}'>
 		<input type='text' id='new{{type}}Title' placeholder='{{type}} Title, at least one character'>
+		{{#if newQuestion}}
+		<br>
+			<input type="radio" name="type" value="radio">Radio<br>
+			<input type="radio" name="type" value="multi-select">Multiple-Choice<br>
+			<input type="radio" name="type" value="text">Text<br>
+		{{/if}}
 		<input type='submit'>
 	</form>
 </script>
