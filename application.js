@@ -4,22 +4,20 @@ $(document).ready(function() {
 
 	newSurveyListener();
 	surveys = [];
+	compileHandlebarsTemplates();
 });
 
 function newSurveyListener() {
 	$('#newSurveyButton').click(function() {
 		$(this).hide();
-		$newSurveyTitleForm = $('<form id="newSurveyTitleForm"></form>');
-		$newSurveyTitleForm.append('<input type="text" name="surveyTitle" id="newSurveyTitle" />');
-		$newSurveyTitleForm.append('<input type="submit" value="submit" />');
-		$newSurveyTitleForm.append('<input type="button" value="cancel" />');
-		$('#newSurveyContainer').append($newSurveyTitleForm);
+	$('#newSurveyContainer').append(titleFormTemplate({type: 'Survey'}));
 	});
 
 	$('#newSurveyContainer').on('submit', 'form', function(e) {
 		e.preventDefault();
 		var surveyTitle = $('#newSurveyTitle').val();
 		var newSurvey = new Survey({text: surveyTitle});
+		
 		if (newSurvey.isValid()) {
 			surveys.push(newSurvey);
 			$('#newSurveyTitleForm').remove();
@@ -29,19 +27,29 @@ function newSurveyListener() {
 		};
 	});
 
-	$('#newSurveyContainer').on('click', 'button', function() {
-		console.log('hi')
-		if ($(this).attr('value') == 'cancel') {
-			$('#newSurveyButton').show();
-			debugger; // hide the form
+	// $('#newSurveyContainer').on('click', 'button', function() {
+	// 	console.log('hi')
+	// 	if ($(this).attr('value') == 'cancel') {
+	// 		$('#newSurveyButton').show();
+	// 		debugger; // hide the form
 
-		};
-	});
+	// 	};
+	// });
 
 };
 
+function compileHandlebarsTemplates() {
+	var titleFormSource = $('#newTitleForm').html();
+	titleFormTemplate = Handlebars.compile(titleFormSource);
+};
+
 function showInProgressSurvey(newSurvey) {
+
+	var count = 0;
 	$('#inProgressSurvey').append('<h1 id="inProgressSurveyTitle">'+ newSurvey.text +'</h1>');
+	$('#inProgressSurvey').append('<div id="newQuestionContainer"></div>');
+
+	$('#newQuestionContainer').append(titleFormTemplate({type: 'Question'}));
 };
 
 // Models Below
@@ -61,8 +69,7 @@ SurveyParent.prototype.isValid = function() {
 
 Survey.prototype = new SurveyParent();
 function Survey(options) {
-	if (!options['text']) throw('Survey title is required');
-	this.text = options['text'];
+	this.text = (!options['text']) ? "" : options['text']
 	if (options['questions']) this.questions = options['questions'];
 };
 
@@ -74,15 +81,15 @@ function Question(options) {
 	this.text = options['text'];
 	this.questionType = options['questionType'];
 	this.questionChoices = options['questionChoices']; // can be null, eg. open-ended question
-	this.questionResponses = [];
+	this.responses = [];
 };
 
 Question.prototype.insertResponse = function(response) {
-	if (response instanceof(Response)) {
-		this.questionResponses.push(response);
-		this.questionResponses[this.questionResponses.length-1].question = this;
+	if (response instanceof(Response) && response.isValid()) {
+		this.responses.push(response);
+		this.responses[this.responses.length-1].question = this;
 	} else {
-		throw 'Supplied response is not an instance of response.';
+		throw 'Supplied response is not a valid response.';
 	};
 };
 
@@ -99,6 +106,7 @@ Question.prototype.isChoicesValid = function() {
 	return true;
 };
 
+Response.prototype = new SurveyParent();
 function Response(response) {
 	if (typeof response === 'string') {
 		this.text = response;

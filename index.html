@@ -2,19 +2,25 @@
 <html>
 <head>
 	<title>AJA Survey Engine</title>
-	<script type="text/javascript" src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js"></script>
-	<script type="text/javascript" src="application.js"></script>
+	<script type='text/javascript' src='http://code.jquery.com/jquery-1.11.3.min.js'></script>
+	<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js'></script>
+	<script type='text/javascript' src='application.js'></script>
 </head>
 <body>
 Welcome to Aja!
-<div id="newSurveyContainer">
-	<button id="newSurveyButton">New Survey</button>
+<div id='newSurveyContainer'>
+	<button id='newSurveyButton'>New Survey</button>
 </div>
 
-<div id="inProgressSurvey">
+<div id='inProgressSurvey'>
 	
 </div>
 
 </body>
+<script id='newTitleForm' type='text/x-handlebars-template'>
+	<form id='new{{type}}TitleForm'>
+		<input type='text' id='new{{type}}Title' placeholder='{{type}} Title, at least one character'>
+		<input type='submit'>
+	</form>
+</script>
 </html>
