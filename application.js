@@ -1,9 +1,10 @@
 $(document).ready(function() {
 	console.log('Hello, Aja.');
-	questionResponseTest();
+	// questionResponseTest();
 
 	newSurveyListener();
 	newQuestionListener();
+	addSubChoiceListener();
 
 	surveys = [];
 
@@ -13,7 +14,7 @@ $(document).ready(function() {
 function newSurveyListener() {
 	$('#newSurveyButton').click(function() {
 		$(this).hide();
-	$('#newSurveyContainer').append(titleFormTemplate({type: 'Survey'}));
+		$('#newSurveyContainer').append(titleFormTemplate({type: 'Survey'}));
 	});
 
 	$('#newSurveyContainer').on('submit', 'form', function(e) {
@@ -31,35 +32,17 @@ function newSurveyListener() {
 		};
 	});
 
-	// $('#newSurveyContainer').on('click', 'button', function() {
-	// 	console.log('hi')
-	// 	if ($(this).attr('value') == 'cancel') {
-	// 		$('#newSurveyButton').show();
-	// 		debugger; // hide the form
-
-	// 	};
-	// });
-
-};
-
-function newQuestionListener() {
-	$('#inProgressSurvey').on('submit', 'form', function(e) {
-		e.preventDefault();
-
-		var newQuestion = new Question({text: $('#newQuestionTitle')})
-	});
 };
 
 function showInProgressSurvey(newSurvey) {
-
-	var count = 0;
+	questionCount = 0;
 	$('#inProgressSurvey').prepend('<h1 id="inProgressSurveyTitle">'+ newSurvey.text +'</h1>');
 	$('#inProgressSurvey').append('<div id="newQuestionContainer"></div>');
 
 	$('#newQuestionContainer').prepend(titleFormTemplate(
 	{
 		type: 'Question',
-		count: (count+1),
+		count: (questionCount+1),
 		newQuestion: true
 	}));
 };
@@ -70,18 +53,80 @@ function newQuestionListener(count) {
 
 		var text = $('#newQuestionTitle').val();
 		var type = $('input:radio[name=type]:checked').val();
-		var newQuestion = new Question({text: text, type: type});
+		var number = $('#newQuestion').attr('number');
+		var newQuestion = new Question({text: text, type: type, number: number});
+
+		if (['radio', 'multi-select'].indexOf(type) != -1) {
+			if (type === 'radio') {
+				var choices = document.getElementById('radioChoices').children;
+			} else {
+				var choices = document.getElementById('multiSelectChoices').children;
+			};
+
+			for (var i = 0; i < choices.length; i++) {
+				var text = choices[i].firstChild.value;
+
+				if (text.length > 0) {
+					newQuestion.questionChoices.push(text);
+				};
+
+			};
+
+		};
+
 		if (newQuestion.isValid()) {
 			currentSurvey.insertQuestion(newQuestion);
+			questionCount += 1;
 		} else {
 			$('#errorMessages').text(newQuestion.errors);
 		};
+	});
+
+	$('#inProgressSurvey').on('change', 'input:radio[name=type]', function() {
+		switch($(this).val()) {
+			case 'multi-select':
+				$('#radioChoices').hide();
+				$('#multiSelectChoices').show();
+				addSubChoice($('#multiSelectChoices'), 0);
+				break;
+			case 'radio':
+				$('#multiSelectChoices').hide();
+				$('#radioChoices').show();
+				addSubChoice('#radioChoices', 0);
+				break;
+			default:
+				$('#radioChoices').hide();
+				$('#multiSelectChoices').hide();
+				break;
+		};
+	});
+};
+
+function addSubChoice(target, count) {
+	$(target).append(radioSubChoice({number: (count+1)}));
+};
+
+function addSubChoiceListener() {
+	$('#inProgressSurvey').on('click', '#addSubChoice', function() {
+		var option = this.previousSibling;
+		if (option.value.length > 0) {
+			var count = parseInt(option.getAttribute('number'));
+			var listId = option.parentElement.parentElement.id;
+			addSubChoice('#'+listId, count);
+			$(this).remove();
+		} else {
+			$('#errorMessages').text('Option cannot be blank.');
+		};
+
 	});
 };
 
 function compileHandlebarsTemplates() {
 	var titleFormSource = $('#newTitleForm').html();
 	titleFormTemplate = Handlebars.compile(titleFormSource);
+
+	var radioSubChoiceSource = $('#radioSubChoice').html();
+	radioSubChoice = Handlebars.compile(radioSubChoiceSource);
 };
 
 // Models Below
@@ -113,19 +158,20 @@ function Survey(options) {
 Survey.prototype.insertQuestion = function(newQuestion) {
 	if (newQuestion instanceof(Question) && newQuestion.isValid()) {
 		this.questions.push(newQuestion);
+		this.questions[this.questions.length-1].survey = this;
+		return newQuestion;
 	};
 };
 
 Question.prototype = new SurveyParent();
 Question.prototype.name = 'Question';
 function Question(options) {
-	// if (!options['text']) throw('Question text is required.');
-	// if (!options['questionType']) throw('Question type is required.');
 
 	this.text = options['text'];
+	this.number = options['number'];
 	this.errors = "";
 	this.questionType = options['type'];
-	this.questionChoices = options['questionChoices']; // can be null, eg. open-ended question
+	this.questionChoices = options['questionChoices'] || [];
 	this.responses = [];
 };
 
@@ -141,50 +187,51 @@ Question.prototype.insertResponse = function(response) {
 Question.prototype.isValid = function() {
 	if (!this.questionType) {
 		this.errors += ('No question type selected (eg. radio, multiple-choice, or open-ended');
-		return false;
+			return false;
+		};
+		if (['radio','drop-down','multi-select'].indexOf(this.questionType) != -1) {
+			if(!this.isChoicesValid()) return false;
+		};
+
+		return this.constructor.prototype.isValid.apply(this);
 	};
-	if (['radio','drop-down','multi-select'].indexOf(this.questionType) != -1) {
-		if(!this.isChoicesValid()) return false;
+
+	Question.prototype.isChoicesValid = function() {
+		if (!this.questionChoices || !this.questionChoices.length > 0) {
+			this.errors += ('A ' + this.questionType + ' question must include at least one choice.')
+			return false;
+		};
+		return true;
 	};
 
-	return this.constructor.prototype.isValid.apply(this);
-};
-
-Question.prototype.isChoicesValid = function() {
-	if (!this.questionChoices || !this.questionChoices.length > 0) {
-		this.errors += ('A ' + this.questionType + ' question must include at least one choice.')
-		return false;
+	Response.prototype = new SurveyParent();
+	Response.prototype.name = "Response";
+	function Response(response) {
+		if (typeof response === 'string') {
+			this.text = response;
+		} else {
+			throw 'Response must initialize with a response string.';
+		};
+		this.question = null;
 	};
-	return true;
-};
 
-Response.prototype = new SurveyParent();
-function Response(response) {
-	if (typeof response === 'string') {
-		this.text = response;
-	} else {
-		throw 'Response must initialize with a response string.';
-	};
-	this.question = null;
-};
+	function questionResponseTest() {
+		var sky = new Question({
+			text: 'What color is the sky?',
+			questionType: 'open-ended'
+		});
+		var blue = new Response('Blue');
+		var red = new Response('Red');
+		sky.insertResponse(red);
+		sky.insertResponse(blue);
+		sky.isValid();
+		console.log(sky);
 
-function questionResponseTest() {
-	var sky = new Question({
-		text: 'What color is the sky?',
-		questionType: 'open-ended'
-	});
-	var blue = new Response('Blue');
-	var red = new Response('Red');
-	sky.insertResponse(red);
-	sky.insertResponse(blue);
-	sky.isValid();
-	console.log(sky);
-
-	var badRadio = new Question({
-		text: 'How many fl. oz in a liter?',
-		questionType: 'radio',
-		questionChoices: []
-	});
+		var badRadio = new Question({
+			text: 'How many fl. oz in a liter?',
+			questionType: 'radio',
+			questionChoices: []
+		});
 
 	// badRadio.isValid(); // expect(function() {badRadio.isValid();} ).toThrow("A radio question must include at least one choice.");
 };

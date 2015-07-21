@@ -1,32 +1,42 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<title>AJA Survey Engine</title>
-	<script type='text/javascript' src='http://code.jquery.com/jquery-1.11.3.min.js'></script>
-	<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js'></script>
-	<script type='text/javascript' src='application.js'></script>
-</head>
-<body>
-Welcome to Aja!
-<div id='newSurveyContainer'>
-	<button id='newSurveyButton'>New Survey</button>
-</div>
+	<head>
+		<title>AJA Survey Engine</title>
+		<script type='text/javascript' src='http://code.jquery.com/jquery-1.11.3.min.js'></script>
+		<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/3.0.3/handlebars.min.js'></script>
+		<script type='text/javascript' src='application.js'></script>
+		<link rel="stylesheet" type="text/css" href="style.css">
+	</head>
 
-<div id='inProgressSurvey'>
-</div>
+	<body>
+		Welcome to Aja!
+		<div id='newSurveyContainer'>
+			<button id='newSurveyButton'>New Survey</button>
+		</div>
 
-</body>
-<script id='newTitleForm' type='text/x-handlebars-template'>
-	<form id='new{{type}}{{count}}'>
-		<input type='text' id='new{{type}}Title' placeholder='{{type}} Title, at least one character'>
-		{{#if newQuestion}}
-		<br>
-			<input type="radio" name="type" value="radio">Radio<br>
-			<input type="radio" name="type" value="multi-select">Multi-Select<br>
-			<input type="radio" name="type" value="text">Open Ended<br>
-		{{/if}}
-		<input type='submit'>
-		<div id='errorMessages'></div>
-	</form>
-</script>
+		<div id='inProgressSurvey'>
+		</div>
+
+	</body>
+
+	<script id='newTitleForm' type='text/x-handlebars-template'>
+		<form id='new{{type}}' number='{{count}}'>
+			<input type='text' id='new{{type}}Title' placeholder='{{type}} Title, at least one character'>
+			{{#if newQuestion}}
+			<br>
+				<input type="radio" name="type" value="radio">Radio<br>
+					<ul class="hidden" id="radioChoices"></ul>
+				<input type="radio" name="type" value="multi-select">Multi-Select<br>
+					<ul class="hidden" id="multiSelectChoices"></ul>
+				<input type="radio" name="type" value="text">Open-Ended<br>
+			{{/if}}
+			<input type='submit'>
+			<div id='errorMessages'></div>
+		</form>
+	</script>
+
+	<script id='radioSubChoice' type="text/x-handlebars-template">
+		<li><input type='text' placeholder='option {{number}}' id='option{{number}}' class='radio-sub-choice' number='{{number}}'><button id='addSubChoice'>Add Another</button></li>
+	</script>
+
 </html>
