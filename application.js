@@ -6,11 +6,13 @@ $(document).ready(function() {
 	addSubChoiceListener();
 	submitSurveyQuestionsListener();
 	submitResponsesListener();
+	displayExistingSurveyListener();
 
 	surveys = [];
 
 	compileHandlebarsTemplates();
 	questionResponseTest();
+	displayExistingSurveys();
 });
 
 function newSurveyListener() {
@@ -137,10 +139,12 @@ function submitSurveyQuestionsListener() {
 		$('#inProgressSurvey').empty();
 		$('#newSurveyButton').show();
 		displaySurvey(currentSurvey);
+		displayExistingSurveys();
 	});
 };
 
 function displaySurvey(survey) {
+	$('#displayedSurvey').empty();
 	var title = survey.text;
 	var questions = survey.questions;
 	$('#displayedSurvey').append(surveyTemplate({title: title}));
@@ -161,7 +165,7 @@ function submitResponsesListener() {
 	$('#displayedSurvey').on('click', '#submitResponses', function() {
 
 		var responses = $('#questionList form');
-
+		var passingResponses = 0;
 		for (var i = 0; i < responses.length; i++) {
 			var questionIndex = responses[i].getAttribute('question-number') - 1;
 			var question = currentSurvey.questions[questionIndex];
@@ -184,11 +188,61 @@ function submitResponsesListener() {
 			question.insertResponse(newResponse);
 			if (question.errors.length > 0) {
 				responses[i].appendChild(document.createTextNode(question.errors));
+			} else {
+				passingResponses += 1
 			};
+		};
+		if (passingResponses == responses.length) {
+			displayResponses();
 		};
 
 	});
 
+};
+
+function displayExistingSurveys() {
+	$('#existingSurveyContainer').empty();
+	for (var i = surveys.length - 1; i >= 0; i--) {
+	 	$('#existingSurveyContainer').append('<button class="existing-survey" surveyNumber="' + i + '">' + surveys[i].text + '</button>');
+	 };
+};
+
+function displayExistingSurveyListener() {
+	$('#existingSurveyContainer').on('click', '.existing-survey', function() {
+		var surveyIndex = this.getAttribute('surveyNumber');
+		currentSurvey = surveys[surveyIndex];
+		displaySurvey(currentSurvey);
+	});
+};
+
+function displayResponses() {
+	$('#displayedSurvey').empty();
+
+	var surveyTitle = currentSurvey.text;
+	var questionsAndResponses = currentSurvey.questions.map(function(question, index) {
+		switch(question.questionType) {
+			case 'multi-select':
+				var result = question.text;
+				var indices = question.responses[0].text;
+				for (var i = 0; i < indices.length; i++) {
+					result += " " + question.questionChoices[parseInt(indices[i])] + ".";
+				};
+				return result;
+
+			case 'radio':
+				var responseChoice = question.responses[0].text[0];
+				return question.text + " " + question.questionChoices[responseChoice] + ".";
+			case 'text':
+				return question.text + " " + question.responses[0].text + ".";
+
+		};
+
+	});
+
+	$('#displayedSurvey').append(displayRespondedTemplate({
+		surveyTitle: surveyTitle,
+		questionsAndResponses: questionsAndResponses
+	}));
 };
 
 function compileHandlebarsTemplates() {
@@ -203,6 +257,9 @@ function compileHandlebarsTemplates() {
 
 	var displayQuestionTemplateSource = $('#displayQuestionTemplate').html();
 	displayQuestionTemplate = Handlebars.compile(displayQuestionTemplateSource);
+
+	var displayRespondedTemplateSource = $('#displayRespondedTemplate').html();
+	displayRespondedTemplate = Handlebars.compile(displayRespondedTemplateSource);
 };
 
 // Models Below

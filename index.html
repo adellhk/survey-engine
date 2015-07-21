@@ -10,6 +10,9 @@
 
 	<body>
 		Welcome to Aja!
+		<div id="existingSurveyContainer">
+		</div>
+
 		<div id='newSurveyContainer'>
 			<button id='newSurveyButton'>New Survey</button>
 		</div>
@@ -68,6 +71,15 @@
 				{{/if}}
 			</form>
 		</li>
+	</script>
+
+	<script id="displayRespondedTemplate" type="text/x-handlebars-template">
+	<h1>Survey Title: {{surveyTitle}}</h1>
+	<ol>
+		{{#each questionsAndResponses}}
+		<li><h2>{{this}}</h2></li>
+		{{/each}}
+	</ol>
 	</script>
 
 </html>
