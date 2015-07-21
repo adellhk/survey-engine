@@ -77,6 +77,14 @@ function newQuestionListener(count) {
 		if (newQuestion.isValid()) {
 			currentSurvey.insertQuestion(newQuestion);
 			questionCount += 1;
+			$('#newQuestion').remove();
+			$('#newQuestionContainer').prepend(titleFormTemplate(
+			{
+				type: 'Question',
+				count: (questionCount+1),
+				newQuestion: true
+			}));
+			$('#newQuestion').prepend('<p>Question number ' + questionCount + ', ' + currentSurvey.questions[questionCount-1].text + ', added.</p>');
 		} else {
 			$('#errorMessages').text(newQuestion.errors);
 		};
