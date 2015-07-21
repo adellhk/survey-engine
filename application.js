@@ -1,15 +1,16 @@
 $(document).ready(function() {
-	console.log('Hello, Aja.');
-	// questionResponseTest();
+	console.log('Hello, AJA.');
 
 	newSurveyListener();
 	newQuestionListener();
 	addSubChoiceListener();
 	submitSurveyQuestionsListener();
+	submitResponsesListener();
 
 	surveys = [];
 
 	compileHandlebarsTemplates();
+	questionResponseTest();
 });
 
 function newSurveyListener() {
@@ -156,6 +157,40 @@ function displaySurvey(survey) {
 
 };
 
+function submitResponsesListener() {
+	$('#displayedSurvey').on('click', '#submitResponses', function() {
+
+		var responses = $('#questionList form');
+
+		for (var i = 0; i < responses.length; i++) {
+			var questionIndex = responses[i].getAttribute('question-number') - 1;
+			var question = currentSurvey.questions[questionIndex];
+			question.errors = "";
+
+			if (question.questionType === "multi-select") {
+				var checked = $('input[type=checkbox]:checked');
+				var responseValue = checked.map(function(index, elem) {
+					return elem.getAttribute('number');
+				});
+			} else if (question.questionType === 'radio') {
+				var checked = $('input[type=radio]:checked');
+				var responseValue = checked.map(function(index, elem) {
+					return elem.getAttribute('number');
+				});
+			} else {
+				var responseValue = responses[i].getElementsByTagName('input')[0].value;
+			};
+			var newResponse = new Response(responseValue, question);
+			question.insertResponse(newResponse);
+			if (question.errors.length > 0) {
+				responses[i].appendChild(document.createTextNode(question.errors));
+			};
+		};
+
+	});
+
+};
+
 function compileHandlebarsTemplates() {
 	var titleFormSource = $('#newTitleForm').html();
 	titleFormTemplate = Handlebars.compile(titleFormSource);
@@ -219,9 +254,6 @@ function Question(options) {
 Question.prototype.insertResponse = function(response) {
 	if (response instanceof(Response) && response.isValid()) {
 		this.responses.push(response);
-		this.responses[this.responses.length-1].question = this;
-	} else {
-		throw 'Supplied response is not a valid response.';
 	};
 };
 
@@ -247,32 +279,67 @@ Question.prototype.isValid = function() {
 
 	Response.prototype = new SurveyParent();
 	Response.prototype.name = "Response";
-	function Response(response) {
-		if (typeof response === 'string') {
-			this.text = response;
-		} else {
-			throw 'Response must initialize with a response string.';
-		};
-		this.question = null;
+	function Response(response, question) {
+		this.text = response;
+		this.question = question;
 	};
+
+	Response.prototype.isValid = function() {
+		var questionType = this.question.questionType;
+
+		switch(questionType) {
+			case 'multi-select':
+				if (!this.text.length > 0) {
+					this.question.errors += 'Multiple choice responses must include at least one selection.'
+					return false;
+				};
+				break;
+			case 'radio':
+				if (!this.text.length == 1) {
+					this.question.errors += "Radio responses must have exactly one selection."
+					return false;
+				};
+				break;
+			case 'text':
+				if (!this.text.length > 0) {
+					this.question.errors += 'Open-ended responses must be at least 1 character long.'
+					return false;
+				};
+				break;
+		};
+
+		return true;
+
+	};
+
+	// tests
 
 	function questionResponseTest() {
 		var sky = new Question({
 			text: 'What color is the sky?',
-			questionType: 'open-ended'
-		});
-		var blue = new Response('Blue');
-		var red = new Response('Red');
-		sky.insertResponse(red);
-		sky.insertResponse(blue);
-		sky.isValid();
-		console.log(sky);
-
-		var badRadio = new Question({
-			text: 'How many fl. oz in a liter?',
-			questionType: 'radio',
-			questionChoices: []
+			type: 'text',
+			number: 1
 		});
 
-	// badRadio.isValid(); // expect(function() {badRadio.isValid();} ).toThrow("A radio question must include at least one choice.");
+		var bespin = new Question({
+			text: 'What color is the sky on Bespin?',
+			type: 'multi-select',
+			questionChoices: ['red', 'clay', 'copper', 'blue'],
+			number: 2
+		});
+
+		var hoth = new Question({
+			text: 'What color is Hoth?',
+			type: 'radio',
+			questionChoices: ['white', 'blue', 'cold'],
+			number: 3
+		});
+
+		var colorQuestions = new Survey({text: 'All About Colors'});
+		colorQuestions.insertQuestion(sky);
+		colorQuestions.insertQuestion(bespin);
+		colorQuestions.insertQuestion(hoth);
+
+		surveys.push(colorQuestions);
+		currentSurvey = surveys[0];
 };

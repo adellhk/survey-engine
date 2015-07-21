@@ -52,7 +52,7 @@
 	<script id='displayQuestionTemplate' type="text/x-handlebars-template">
 		<li>
 			<h2>{{title}}</h2>
-			<form id='question-{{number}}'>
+			<form id='question-{{number}}' question-number='{{number}}'>
 				{{#if multiSelect}}
 					{{#each questionChoices}}
 						<label><input type="checkbox" number="{{@index}}">{{this}}</label><br>
